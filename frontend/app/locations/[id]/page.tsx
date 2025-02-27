@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
@@ -25,8 +25,9 @@ interface Location {
   createdAt: string;
 }
 
-export default function LocationDetailPage({ params }: { params: { id: string } }) {
-  const { id } = params;
+export default function LocationDetailPage() {
+  const params = useParams();
+  const id = params.id as string;
   const { user } = useAuth();
   const [location, setLocation] = useState<Location | null>(null);
   const [loading, setLoading] = useState(true);
@@ -47,7 +48,9 @@ export default function LocationDetailPage({ params }: { params: { id: string } 
       }
     };
 
-    fetchLocation();
+    if (id) {
+      fetchLocation();
+    }
   }, [id]);
 
   const handleDelete = async () => {

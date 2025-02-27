@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import axios from 'axios';
 import { useAuth } from '../../../context/AuthContext';
@@ -19,8 +19,9 @@ interface LocationFormData {
   features: string[];
 }
 
-export default function EditLocationPage({ params }: { params: { id: string } }) {
-  const { id } = params;
+export default function EditLocationPage() {
+  const params = useParams();
+  const id = params.id as string;
   const { user } = useAuth();
   const [formData, setFormData] = useState<LocationFormData>({
     name: '',
@@ -64,7 +65,9 @@ export default function EditLocationPage({ params }: { params: { id: string } })
       }
     };
 
-    fetchLocation();
+    if (id) {
+      fetchLocation();
+    }
   }, [id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
