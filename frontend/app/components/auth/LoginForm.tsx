@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { AuthError } from '../types/auth';
+import { AuthError } from '../../types/auth';
 
 export default function LoginForm() {
   const [email, setEmail] = useState('');
