@@ -11,6 +11,11 @@ interface Location {
   name: string;
   address: string;
   description: string;
+  coordinates: {
+    lat: number;
+    lng: number;
+  };
+  createdAt: string;
 }
 
 export default function LocationList() {
@@ -21,9 +26,12 @@ export default function LocationList() {
   useEffect(() => {
     const fetchLocations = async () => {
       try {
-        console.log('Fetching locations from:', `${API_URL}/api/locations`);
-        const response = await axios.get(`${API_URL}/api/locations`);
-        console.log('Locations data:', response.data);
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${API_URL}/api/locations`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
         setLocations(response.data);
         setLoading(false);
       } catch (err: any) {
@@ -41,18 +49,13 @@ export default function LocationList() {
   }
 
   if (error) {
-    return (
-      <div className="text-center py-8 text-red-600">
-        <p>{error}</p>
-        <p className="mt-2">API URL: {API_URL}</p>
-      </div>
-    );
+    return <div className="text-center py-8 text-red-600">{error}</div>;
   }
 
   if (locations.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="mb-4">No locations found.</p>
+        <p className="mb-4">No locations found. Add your first location to get started!</p>
         <Link 
           href="/locations/new" 
           className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
@@ -64,23 +67,28 @@ export default function LocationList() {
   }
 
   return (
-    <div>
-      <h2 className="text-xl font-bold mb-4">Your Locations ({locations.length})</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {locations.map((location) => (
-          <div key={location._id} className="border p-4 rounded-md">
-            <h3 className="font-bold">{location.name}</h3>
-            <p>{location.address}</p>
-            <p className="mt-2 text-sm text-gray-600">{location.description}</p>
-            <Link 
-              href={`/locations/${location._id}`}
-              className="mt-2 inline-block text-indigo-600"
-            >
-              View Details
-            </Link>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {locations.map((location) => (
+        <div key={location._id} className="bg-white rounded-lg overflow-hidden shadow-md">
+          <div className="p-6">
+            <h3 className="text-xl font-semibold mb-2">{location.name}</h3>
+            <p className="text-gray-600 mb-2">{location.address}</p>
+            <p className="text-gray-700 mb-4 line-clamp-2">{location.description}</p>
+            
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-500">
+                {new Date(location.createdAt).toLocaleDateString()}
+              </span>
+              <Link 
+                href={`/locations/${location._id}`}
+                className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-md hover:bg-indigo-200"
+              >
+                View Details
+              </Link>
+            </div>
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
     </div>
   );
 } 

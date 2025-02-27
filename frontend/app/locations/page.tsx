@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '../context/AuthContext';
+import LocationList from '../components/locations/LocationList';
 
 export default function LocationsPage() {
   const { user, isLoading } = useAuth();
@@ -13,7 +14,7 @@ export default function LocationsPage() {
   }, []);
 
   if (!mounted || isLoading) {
-    return <div className="p-8">Loading...</div>;
+    return <div className="p-8 text-center">Loading...</div>;
   }
 
   return (
@@ -31,31 +32,20 @@ export default function LocationsPage() {
           )}
         </div>
         
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold mb-4">Welcome to your locations dashboard!</h2>
-          
-          {user ? (
-            <div>
-              <p className="mb-4">You can add new locations or view your existing ones.</p>
-              <Link 
-                href="/locations/new"
-                className="inline-block px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-              >
-                Add Your First Location
-              </Link>
-            </div>
-          ) : (
-            <div>
-              <p className="mb-4">Please log in to view and manage locations.</p>
-              <Link 
-                href="/login" 
-                className="inline-block px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-              >
-                Log In
-              </Link>
-            </div>
-          )}
-        </div>
+        {user ? (
+          <LocationList />
+        ) : (
+          <div className="bg-white p-6 rounded-lg shadow-md text-center">
+            <h2 className="text-xl font-semibold mb-4">Welcome to LocationScout!</h2>
+            <p className="mb-4">Please log in to view and manage locations.</p>
+            <Link 
+              href="/login" 
+              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+            >
+              Log In
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );
