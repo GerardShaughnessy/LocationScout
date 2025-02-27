@@ -14,13 +14,13 @@ const app = express();
 // Connect to database
 connectDB();
 
-// Add CORS middleware
+// Middleware
 app.use(cors({
-  origin: 'http://localhost:3000', // Your frontend URL
+  origin: process.env.NODE_ENV === 'production' 
+    ? process.env.FRONTEND_URL 
+    : 'http://localhost:3000',
   credentials: true
 }));
-
-// Middleware
 app.use(express.json());
 
 // Routes
@@ -43,8 +43,10 @@ app.get('/', (req, res) => {
   res.json({ message: 'LocationScout API running!' });
 });
 
-// Server port - this should be 3001 (backend port)
+// Update these lines for Railway deployment
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
+const HOST = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost';
+
+app.listen(PORT, HOST, () => {
   console.log(`Server running on port ${PORT}`);
 }); 
