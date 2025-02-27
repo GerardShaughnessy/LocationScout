@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
@@ -26,8 +26,8 @@ interface Location {
 }
 
 export default function LocationDetailPage() {
-  const params = useParams();
-  const id = params.id as string;
+  // Get the ID from the URL directly
+  const [id, setId] = useState<string>('');
   const { user } = useAuth();
   const [location, setLocation] = useState<Location | null>(null);
   const [loading, setLoading] = useState(true);
@@ -35,8 +35,19 @@ export default function LocationDetailPage() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const router = useRouter();
 
+  // Extract the ID from the URL
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const pathParts = window.location.pathname.split('/');
+      const locationId = pathParts[pathParts.length - 1]; // Get the ID from the URL
+      setId(locationId);
+    }
+  }, []);
+
   useEffect(() => {
     const fetchLocation = async () => {
+      if (!id) return;
+      
       try {
         const response = await axios.get(`${API_URL}/api/locations/${id}`);
         setLocation(response.data);
@@ -48,9 +59,7 @@ export default function LocationDetailPage() {
       }
     };
 
-    if (id) {
-      fetchLocation();
-    }
+    fetchLocation();
   }, [id]);
 
   const handleDelete = async () => {

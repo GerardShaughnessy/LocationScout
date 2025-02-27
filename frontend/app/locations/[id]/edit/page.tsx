@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import axios from 'axios';
 import { useAuth } from '../../../context/AuthContext';
@@ -20,8 +20,8 @@ interface LocationFormData {
 }
 
 export default function EditLocationPage() {
-  const params = useParams();
-  const id = params.id as string;
+  // Get the ID from the URL directly
+  const [id, setId] = useState<string>('');
   const { user } = useAuth();
   const [formData, setFormData] = useState<LocationFormData>({
     name: '',
@@ -38,8 +38,19 @@ export default function EditLocationPage() {
   const [error, setError] = useState('');
   const router = useRouter();
 
+  // Extract the ID from the URL
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const pathParts = window.location.pathname.split('/');
+      const locationId = pathParts[pathParts.length - 2]; // Get the ID from the URL
+      setId(locationId);
+    }
+  }, []);
+
   useEffect(() => {
     const fetchLocation = async () => {
+      if (!id) return;
+      
       try {
         const token = localStorage.getItem('token');
         const response = await axios.get(`${API_URL}/api/locations/${id}`, {
@@ -65,9 +76,7 @@ export default function EditLocationPage() {
       }
     };
 
-    if (id) {
-      fetchLocation();
-    }
+    fetchLocation();
   }, [id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
