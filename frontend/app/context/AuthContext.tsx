@@ -104,6 +104,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user]);
 
+  const fetchUserData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      console.log('Token exists:', !!token);
+      
+      if (!token) {
+        setUser(null);
+        setIsLoading(false);
+        return;
+      }
+      
+      console.log('Fetching user data from:', `${API_URL}/api/users/me`);
+      const response = await axios.get(`${API_URL}/api/users/me`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      
+      console.log('User data:', response.data);
+      setUser(response.data);
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      localStorage.removeItem('token');
+      setUser(null);
+      setIsLoading(false);
+    }
+  };
+
   return (
     <AuthContext.Provider value={{ user, login, register, logout, isLoading }}>
       {children}

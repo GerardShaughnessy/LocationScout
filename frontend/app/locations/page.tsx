@@ -14,38 +14,37 @@ export default function LocationsPage() {
   }, []);
 
   if (!mounted || isLoading) {
-    return <div className="min-h-screen p-8 flex items-center justify-center">Loading...</div>;
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-screen p-8 flex flex-col items-center justify-center">
-        <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-        <p className="mb-4">You need to be logged in to view this page.</p>
-        <Link 
-          href="/login"
-          className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-        >
-          Log In
-        </Link>
-      </div>
-    );
+    return <div className="p-8">Loading...</div>;
   }
 
   return (
-    <div className="min-h-screen p-8">
+    <div className="p-8">
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-bold">Locations</h1>
-          <Link 
-            href="/locations/new"
-            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-          >
-            Add New Location
-          </Link>
+          {user && (
+            <Link 
+              href="/locations/new"
+              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+            >
+              Add New Location
+            </Link>
+          )}
         </div>
         
-        <LocationList />
+        {user ? (
+          <LocationList />
+        ) : (
+          <div className="text-center py-8">
+            <p className="mb-4">Please log in to view and manage locations.</p>
+            <Link 
+              href="/login" 
+              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+            >
+              Log In
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );

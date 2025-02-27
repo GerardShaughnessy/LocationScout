@@ -11,14 +11,6 @@ interface Location {
   name: string;
   address: string;
   description: string;
-  createdBy: {
-    _id: string;
-    name: string;
-  };
-  photos: {
-    url: string;
-    caption: string;
-  }[];
 }
 
 export default function LocationList() {
@@ -29,10 +21,13 @@ export default function LocationList() {
   useEffect(() => {
     const fetchLocations = async () => {
       try {
+        console.log('Fetching locations from:', `${API_URL}/api/locations`);
         const response = await axios.get(`${API_URL}/api/locations`);
+        console.log('Locations data:', response.data);
         setLocations(response.data);
         setLoading(false);
       } catch (err: any) {
+        console.error('Error fetching locations:', err);
         setError('Failed to fetch locations');
         setLoading(false);
       }
@@ -46,7 +41,12 @@ export default function LocationList() {
   }
 
   if (error) {
-    return <div className="text-center py-8 text-red-600">{error}</div>;
+    return (
+      <div className="text-center py-8 text-red-600">
+        <p>{error}</p>
+        <p className="mt-2">API URL: {API_URL}</p>
+      </div>
+    );
   }
 
   if (locations.length === 0) {
@@ -64,38 +64,23 @@ export default function LocationList() {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {locations.map((location) => (
-        <div key={location._id} className="border rounded-lg overflow-hidden shadow-md">
-          {location.photos && location.photos.length > 0 ? (
-            <img 
-              src={location.photos[0].url} 
-              alt={location.name} 
-              className="w-full h-48 object-cover"
-            />
-          ) : (
-            <div className="w-full h-48 bg-gray-200 flex items-center justify-center">
-              <span className="text-gray-500">No image available</span>
-            </div>
-          )}
-          
-          <div className="p-4">
-            <h3 className="text-xl font-semibold mb-2">{location.name}</h3>
-            <p className="text-gray-600 mb-2">{location.address}</p>
-            <p className="text-gray-700 mb-4 line-clamp-2">{location.description}</p>
-            
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-500">Added by {location.createdBy.name}</span>
-              <Link 
-                href={`/locations/${location._id}`}
-                className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-md hover:bg-indigo-200"
-              >
-                View Details
-              </Link>
-            </div>
+    <div>
+      <h2 className="text-xl font-bold mb-4">Your Locations ({locations.length})</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {locations.map((location) => (
+          <div key={location._id} className="border p-4 rounded-md">
+            <h3 className="font-bold">{location.name}</h3>
+            <p>{location.address}</p>
+            <p className="mt-2 text-sm text-gray-600">{location.description}</p>
+            <Link 
+              href={`/locations/${location._id}`}
+              className="mt-2 inline-block text-indigo-600"
+            >
+              View Details
+            </Link>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 } 

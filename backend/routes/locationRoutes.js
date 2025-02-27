@@ -111,4 +111,36 @@ router.get('/user', protect, async (req, res) => {
   }
 });
 
+// Add a test route to create a sample location
+router.get('/create-test', async (req, res) => {
+  try {
+    // Check if we already have locations
+    const existingLocations = await Location.find();
+    
+    if (existingLocations.length > 0) {
+      return res.json({ message: 'Test locations already exist', count: existingLocations.length });
+    }
+    
+    // Create a test location
+    const testLocation = new Location({
+      name: 'Test Location',
+      address: '123 Test Street, Test City',
+      description: 'This is a test location created automatically.',
+      coordinates: {
+        lat: 40.7128,
+        lng: -74.0060
+      },
+      features: ['Parking', 'Restrooms', 'Electricity'],
+      createdBy: '64f5a53e9d312e1f0d7be123' // Replace with a valid user ID from your database
+    });
+    
+    await testLocation.save();
+    
+    res.json({ message: 'Test location created successfully', location: testLocation });
+  } catch (error) {
+    console.error('Error creating test location:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 module.exports = router; 

@@ -2,6 +2,7 @@ const locationRoutes = require('./routes/locationRoutes');
 const passwordResetRoutes = require('./routes/passwordResetRoutes');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
+const cors = require('cors');
 
 // Define rate limiters
 const authLimiter = rateLimit({
@@ -28,4 +29,10 @@ app.use('/api/users/register', authLimiter);
 app.use('/api/password/request', passwordResetLimiter);
 
 // Use Helmet for security headers
-app.use(helmet()); 
+app.use(helmet());
+
+// Update CORS configuration
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || 'https://your-vercel-app.vercel.app',
+  credentials: true
+})); 
