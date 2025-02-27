@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { AuthError } from '../types/auth';
 
 export default function RegisterForm() {
   const [formData, setFormData] = useState({
@@ -25,8 +26,9 @@ export default function RegisterForm() {
         formData.department
       );
       router.push('/');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to register');
+    } catch (error: unknown) {
+      const authError = error as AuthError;
+      setError(authError.response?.data?.message || 'Failed to register');
     }
   };
 

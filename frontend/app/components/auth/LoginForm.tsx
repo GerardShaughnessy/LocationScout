@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { AuthError } from '../types/auth';
 
 export default function LoginForm() {
   const [email, setEmail] = useState('');
@@ -16,8 +17,9 @@ export default function LoginForm() {
     try {
       await login(email, password);
       router.push('/locations'); // Redirect to locations page after login
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to login');
+    } catch (error: unknown) {
+      const authError = error as AuthError;
+      setError(authError.response?.data?.message || 'Failed to login');
     }
   };
 
