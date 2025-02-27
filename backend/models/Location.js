@@ -1,55 +1,64 @@
 const mongoose = require('mongoose');
 
+// Check if the model is already defined to avoid the OverwriteModelError
 const locationSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  address: { type: String, required: true },
+  name: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  address: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  description: {
+    type: String,
+    required: true
+  },
   coordinates: {
-    lat: { type: Number, required: true },
-    lng: { type: Number, required: true }
+    lat: {
+      type: Number,
+      required: true
+    },
+    lng: {
+      type: Number,
+      required: true
+    }
   },
-  category: { type: String, required: true },
-  specs: {
-    power: String,
-    parking: String,
-    squareFootage: Number,
-    bathrooms: Number,
-    amps: String,
-    floors: Number,
-    elevator: Boolean,
-    theftRating: Number
-  },
-  neighborhood: {
-    safetyRating: Number,
-    neighborIssues: String,
-    curfew: String,
-    nearbyAmenities: [String]
-  },
+  features: [String],
   photos: [{
     url: String,
     caption: String,
-    uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    uploadDate: Date
+    uploadedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    uploadedAt: {
+      type: Date,
+      default: Date.now
+    }
   }],
-  ratings: [{
-    score: Number,
-    department: String,
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    date: Date
-  }],
-  comments: [{
-    text: String,
-    department: String,
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    date: Date
-  }],
-  privacy: {
-    type: String,
-    enum: ['private', 'shared', 'public'],
-    default: 'private'
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
   },
-  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
+  }
 });
 
-module.exports = mongoose.model('Location', locationSchema); 
+// Update the updatedAt field before saving
+locationSchema.pre('save', function(next) {
+  this.updatedAt = Date.now();
+  next();
+});
+
+// Use this pattern to avoid the OverwriteModelError
+module.exports = mongoose.models.Location || mongoose.model('Location', locationSchema); 

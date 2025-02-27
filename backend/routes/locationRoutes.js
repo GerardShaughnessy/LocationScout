@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
-const Location = require('../models/locationModel');
+const Location = require('../models/Location');
 
 // Get all locations
 router.get('/', async (req, res) => {
