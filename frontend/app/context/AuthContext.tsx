@@ -69,6 +69,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
+  const refreshToken = async () => {
+    try {
+      const refreshToken = localStorage.getItem('refreshToken');
+      
+      if (!refreshToken) {
+        setUser(null);
+        return;
+      }
+      
+      const response = await axios.post(`${API_URL}/api/users/refresh-token`, {
+        refreshToken
+      });
+      
+      localStorage.setItem('token', response.data.accessToken);
+      
+      // Fetch user data with new token
+      await fetchUserData();
+    } catch (error) {
+      console.error('Token refresh failed:', error);
+      logout();
+    }
+  };
+
+  // Set up token refresh interval
+  useEffect(() => {
+    if (user) {
+      // Refresh token every 50 minutes (before the 1-hour expiration)
+      const interval = setInterval(() => {
+        refreshToken();
+      }, 50 * 60 * 1000);
+      
+      return () => clearInterval(interval);
+    }
+  }, [user]);
+
   return (
     <AuthContext.Provider value={{ user, login, register, logout, isLoading }}>
       {children}

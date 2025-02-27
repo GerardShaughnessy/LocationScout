@@ -1,13 +1,15 @@
-import { AuthProvider } from './context/AuthContext'
 import './globals.css'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
+import { AuthProvider } from './context/AuthContext'
+import Navbar from './components/layout/Navbar'
+import Footer from './components/layout/Footer'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'LocationScout',
-  description: 'Film location scouting made easy',
+  description: 'Find and share the perfect locations for your next project',
 }
 
 export default function RootLayout({
@@ -19,7 +21,11 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <AuthProvider>
-          {children}
+          <div className="flex flex-col min-h-screen">
+            <Navbar />
+            <main className="flex-grow">{children}</main>
+            <Footer />
+          </div>
         </AuthProvider>
       </body>
     </html>

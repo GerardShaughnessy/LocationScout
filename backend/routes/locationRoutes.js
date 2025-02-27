@@ -101,4 +101,14 @@ router.delete('/:id', protect, async (req, res) => {
   }
 });
 
+// Get locations created by the logged-in user
+router.get('/user', protect, async (req, res) => {
+  try {
+    const locations = await Location.find({ createdBy: req.user.id });
+    res.json(locations);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 module.exports = router; 
