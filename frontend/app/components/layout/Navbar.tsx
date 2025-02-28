@@ -50,7 +50,7 @@ export default function Navbar() {
             <Link 
               href="/locations" 
               className={`px-3 py-2 rounded-md text-sm font-medium ${
-                pathname === '/locations' || pathname.startsWith('/locations/') 
+                pathname === '/locations' || pathname.startsWith('/location-') 
                   ? 'bg-indigo-700 text-white' 
                   : 'text-indigo-100 hover:bg-indigo-500'
               }`}
@@ -160,7 +160,7 @@ export default function Navbar() {
             href="/locations" 
             onClick={closeMenu}
             className={`block px-3 py-2 rounded-md text-base font-medium ${
-              pathname === '/locations' || pathname.startsWith('/locations/') 
+              pathname === '/locations' || pathname.startsWith('/location-') 
                 ? 'bg-indigo-700 text-white' 
                 : 'text-indigo-100 hover:bg-indigo-500'
             }`}

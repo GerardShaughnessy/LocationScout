@@ -2,21 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '../context/AuthContext';
+import Link from 'next/link';
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 export default function ProfilePage() {
   const { user, isLoading, logout } = useAuth();
-  const [mounted, setMounted] = useState(false);
   const [userLocations, setUserLocations] = useState([]);
   const [isLoadingLocations, setIsLoadingLocations] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    setMounted(true);
-    
     if (user) {
       fetchUserLocations();
     }
@@ -45,8 +43,8 @@ export default function ProfilePage() {
     }
   };
 
-  if (!mounted || isLoading) {
-    return <div className="min-h-screen p-8 flex items-center justify-center">Loading...</div>;
+  if (isLoading) {
+    return <div className="p-8 text-center">Loading...</div>;
   }
 
   if (!user) {
@@ -55,11 +53,11 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen p-8">
+    <div className="p-8">
       <div className="max-w-4xl mx-auto">
         <div className="bg-white shadow-md rounded-lg overflow-hidden">
           <div className="bg-indigo-600 p-6">
-            <h1 className="text-2xl font-bold text-white">Profile</h1>
+            <h1 className="text-2xl font-bold text-white">Your Profile</h1>
           </div>
           
           <div className="p-6">
@@ -90,24 +88,24 @@ export default function ProfilePage() {
                     <div key={location._id} className="border rounded-md p-4">
                       <h3 className="font-medium mb-2">{location.name}</h3>
                       <p className="text-gray-600 text-sm mb-2">{location.address}</p>
-                      <button
-                        onClick={() => router.push(`/locations/${location._id}`)}
+                      <Link
+                        href={`/location-view/${location._id}`}
                         className="text-indigo-600 hover:text-indigo-800 text-sm"
                       >
                         View Details
-                      </button>
+                      </Link>
                     </div>
                   ))}
                 </div>
               ) : (
                 <div>
                   <p className="mb-4">You haven't added any locations yet.</p>
-                  <button
-                    onClick={() => router.push('/locations/new')}
+                  <Link
+                    href="/location-new"
                     className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
                   >
                     Add Your First Location
-                  </button>
+                  </Link>
                 </div>
               )}
             </div>

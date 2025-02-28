@@ -2,6 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
+
+// Import the map component dynamically with no SSR
+const LocationMap = dynamic(
+  () => import('../../components/map/LocationMap'),
+  { ssr: false }
+);
 
 export default function LocationViewPage() {
   const [id, setId] = useState('');
@@ -37,6 +44,15 @@ export default function LocationViewPage() {
           <div className="p-6">
             <h1 className="text-3xl font-bold mb-2">Location Details</h1>
             <p className="text-gray-600 mb-4">Location ID: {id}</p>
+            
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold mb-2">Map</h2>
+              <LocationMap 
+                lat={location.coordinates.lat} 
+                lng={location.coordinates.lng} 
+                name={location.name} 
+              />
+            </div>
             
             <div className="mb-6">
               <h2 className="text-xl font-semibold mb-2">Description</h2>
