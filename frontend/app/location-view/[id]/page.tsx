@@ -3,6 +3,11 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import ImageGallery from '../../components/locations/ImageGallery';
+import ImageUpload from '../../components/locations/ImageUpload';
+import StarRating from '../../components/reviews/StarRating';
+import ReviewForm from '../../components/reviews/ReviewForm';
+import ReviewList from '../../components/reviews/ReviewList';
 
 // Import the map component dynamically with no SSR
 const LocationMap = dynamic(
@@ -13,6 +18,9 @@ const LocationMap = dynamic(
 export default function LocationViewPage() {
   const [id, setId] = useState('');
   const [loading, setLoading] = useState(true);
+  const [refreshImages, setRefreshImages] = useState(false);
+  const [refreshReviews, setRefreshReviews] = useState(false);
+  const isOwner = user && location && user.id === location.createdBy;
 
   useEffect(() => {
     // Get the ID from the URL
@@ -21,6 +29,8 @@ export default function LocationViewPage() {
       const locationId = pathParts[pathParts.length - 1]; // Get the ID from the URL
       setId(locationId);
       setLoading(false);
+      setRefreshImages(false);
+      setRefreshReviews(false);
     }
   }, []);
 
@@ -59,6 +69,43 @@ export default function LocationViewPage() {
               <p className="text-gray-700">Location details will be loaded here.</p>
             </div>
             
+            {location.images && location.images.length > 0 && (
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold mb-2">Images</h2>
+                <ImageGallery 
+                  locationId={location._id} 
+                  images={location.images} 
+                  isOwner={isOwner}
+                  onImageDeleted={() => setRefreshImages(true)} 
+                />
+              </div>
+            )}
+            
+            <div className="mb-6">
+              <div className="flex items-center mb-2">
+                <h2 className="text-xl font-semibold mr-2">Reviews</h2>
+                <div className="flex items-center">
+                  <StarRating rating={location.rating} size="sm" />
+                  <span className="ml-2 text-sm">
+                    ({location.numReviews} {location.numReviews === 1 ? 'review' : 'reviews'})
+                  </span>
+                </div>
+              </div>
+              
+              {location.reviews && (
+                <ReviewList 
+                  locationId={location._id} 
+                  reviews={location.reviews} 
+                  onReviewDeleted={() => setRefreshReviews(true)} 
+                />
+              )}
+              
+              <ReviewForm 
+                locationId={location._id}
+                onReviewAdded={() => setRefreshReviews(true)}
+              />
+            </div>
+            
             <div className="flex space-x-4 mt-6">
               <Link 
                 href={`/location-edit/${id}`}
@@ -69,6 +116,13 @@ export default function LocationViewPage() {
             </div>
           </div>
         </div>
+
+        {isOwner && (
+          <ImageUpload 
+            locationId={location._id}
+            onUploadSuccess={() => setRefreshImages(true)}
+          />
+        )}
       </div>
     </div>
   );

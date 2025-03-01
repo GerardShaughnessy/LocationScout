@@ -78,7 +78,15 @@ export default function ProfilePage() {
             </div>
             
             <div className="mb-8">
-              <h2 className="text-xl font-semibold mb-4">Your Locations</h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">Your Locations</h2>
+                <Link
+                  href="/location-new"
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm"
+                >
+                  Add New Location
+                </Link>
+              </div>
               
               {isLoadingLocations ? (
                 <p>Loading your locations...</p>
@@ -88,12 +96,21 @@ export default function ProfilePage() {
                     <div key={location._id} className="border rounded-md p-4">
                       <h3 className="font-medium mb-2">{location.name}</h3>
                       <p className="text-gray-600 text-sm mb-2">{location.address}</p>
-                      <Link
-                        href={`/location-view/${location._id}`}
-                        className="text-indigo-600 hover:text-indigo-800 text-sm"
-                      >
-                        View Details
-                      </Link>
+                      <p className="text-gray-600 text-sm mb-3">Category: {location.category}</p>
+                      <div className="flex space-x-3">
+                        <Link
+                          href={`/location-view/${location._id}`}
+                          className="text-indigo-600 hover:text-indigo-800 text-sm"
+                        >
+                          View
+                        </Link>
+                        <Link
+                          href={`/location-edit/${location._id}`}
+                          className="text-indigo-600 hover:text-indigo-800 text-sm"
+                        >
+                          Edit
+                        </Link>
+                      </div>
                     </div>
                   ))}
                 </div>
