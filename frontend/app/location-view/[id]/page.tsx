@@ -69,7 +69,7 @@ export default function LocationViewPage() {
               <p className="text-gray-700">Location details will be loaded here.</p>
             </div>
             
-            {location.images && location.images.length > 0 && (
+            {location && location.images && location.images.length > 0 && (
               <div className="mb-6">
                 <h2 className="text-xl font-semibold mb-2">Images</h2>
                 <ImageGallery 
@@ -117,7 +117,7 @@ export default function LocationViewPage() {
           </div>
         </div>
 
-        {isOwner && (
+        {location && isOwner && (
           <ImageUpload 
             locationId={location._id}
             onUploadSuccess={() => setRefreshImages(true)}
