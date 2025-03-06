@@ -26,6 +26,11 @@ const locationSchema = new mongoose.Schema({
       required: true
     }
   },
+  visibility: {
+    type: String,
+    enum: ['private', 'shared', 'public'],
+    default: 'private'
+  },
   features: [String],
   photos: [{
     url: String,

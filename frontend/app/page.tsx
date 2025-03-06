@@ -3,6 +3,13 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from './context/AuthContext';
+import dynamic from 'next/dynamic';
+
+// Dynamically import MapView to avoid SSR issues with Leaflet
+const MapView = dynamic(
+  () => import('./components/map/MapView'),
+  { ssr: false }
+);
 
 export default function HomePage() {
   const { user, isLoading } = useAuth();
@@ -113,6 +120,7 @@ export default function HomePage() {
           </div>
         </div>
       </div>
+      <MapView />
     </div>
   );
 } 
