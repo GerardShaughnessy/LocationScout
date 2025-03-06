@@ -3,6 +3,13 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '../context/AuthContext';
+import dynamic from 'next/dynamic';
+
+// Import MapView component dynamically to avoid SSR issues
+const MapView = dynamic(
+  () => import('../components/map/MapView'),
+  { ssr: false }
+);
 
 export default function LocationsPage() {
   const { user, isLoading } = useAuth();
@@ -17,9 +24,9 @@ export default function LocationsPage() {
   }
 
   return (
-    <div className="p-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
+    <div>
+      <div className="p-4 bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
           <h1 className="text-2xl font-bold">Locations</h1>
           {user && (
             <Link 
@@ -30,28 +37,14 @@ export default function LocationsPage() {
             </Link>
           )}
         </div>
-        
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold mb-4">Welcome to your locations dashboard!</h2>
-          
-          {user ? (
-            <div>
-              <p className="mb-4">You can add new locations or view your existing ones.</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                <div className="border p-4 rounded-md">
-                  <h3 className="font-bold">Sample Location</h3>
-                  <p>123 Main Street, Anytown</p>
-                  <Link 
-                    href="/location-view/sample-id"
-                    className="mt-2 inline-block text-indigo-600"
-                  >
-                    View Details
-                  </Link>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div>
+      </div>
+      
+      {user ? (
+        <MapView />
+      ) : (
+        <div className="p-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="bg-white p-6 rounded-lg shadow-md">
               <p className="mb-4">Please log in to view and manage locations.</p>
               <Link 
                 href="/login" 
@@ -60,9 +53,9 @@ export default function LocationsPage() {
                 Log In
               </Link>
             </div>
-          )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 } 
