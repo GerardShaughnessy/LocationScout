@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import Link from 'next/link';
@@ -19,6 +19,23 @@ interface Location {
     lat: number;
     lng: number;
   };
+}
+
+// Custom hook to fix Leaflet default icon issue
+function useLeafletIcons() {
+  useEffect(() => {
+    // Define the interface for the Icon prototype
+    interface IconDefault extends L.Icon.Default {
+      _getIconUrl?: string;
+    }
+    
+    delete (L.Icon.Default.prototype as IconDefault)._getIconUrl;
+    L.Icon.Default.mergeOptions({
+      iconUrl: '/leaflet/marker-icon.png',
+      iconRetinaUrl: '/leaflet/marker-icon-2x.png',
+      shadowUrl: '/leaflet/marker-shadow.png',
+    });
+  }, []);
 }
 
 // Custom marker icons for different visibility types
@@ -45,22 +62,29 @@ const markerIcons = {
   public: createMarkerIcon('#4444FF'),   // Blue
 };
 
+// Map initialization component
+function MapInitializer() {
+  const map = useMap();
+  
+  useEffect(() => {
+    map.invalidateSize();
+  }, [map]);
+  
+  return null;
+}
+
 export default function MapView() {
   const [locations, setLocations] = useState<Location[]>([]);
   const [visibilityFilter, setVisibilityFilter] = useState<VisibilityType[]>(['private', 'shared', 'public']);
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
   const [mounted, setMounted] = useState(false);
 
+  // Initialize Leaflet icons
+  useLeafletIcons();
+
   useEffect(() => {
     setMounted(true);
-    // Fix Leaflet icon issue
-    delete L.Icon.Default.prototype._getIconUrl;
-    L.Icon.Default.mergeOptions({
-      iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
-      iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-      shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
-    });
-
+    
     // Fetch locations
     const fetchLocations = async () => {
       try {
@@ -90,7 +114,7 @@ export default function MapView() {
   );
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-[calc(100vh-64px)] flex flex-col">
       {/* Visibility Toggle Bar */}
       <div className="bg-white p-4 shadow-md z-10">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
@@ -134,40 +158,44 @@ export default function MapView() {
       </div>
 
       {/* Map/List View */}
-      <div className="flex-1">
+      <div className="flex-1 relative">
         {viewMode === 'map' ? (
-          <MapContainer
-            center={[37.7749, -122.4194]} // Default to San Francisco
-            zoom={12}
-            style={{ height: '100%', width: '100%' }}
-          >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            {filteredLocations.map((location) => (
-              <Marker
-                key={location._id}
-                position={[location.coordinates.lat, location.coordinates.lng]}
-                icon={markerIcons[location.visibility]}
-              >
-                <Popup>
-                  <div className="p-2">
-                    <h3 className="font-bold">{location.name}</h3>
-                    <p className="text-sm text-gray-600">{location.address}</p>
-                    <Link
-                      href={`/location/${location._id}`}
-                      className="text-indigo-600 hover:text-indigo-800 text-sm mt-2 block"
-                    >
-                      View Details →
-                    </Link>
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
-          </MapContainer>
+          <div className="absolute inset-0">
+            <MapContainer
+              center={[37.7749, -122.4194]} // Default to San Francisco
+              zoom={12}
+              style={{ height: '100%', width: '100%' }}
+              scrollWheelZoom={true}
+            >
+              <MapInitializer />
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              {filteredLocations.map((location) => (
+                <Marker
+                  key={location._id}
+                  position={[location.coordinates.lat, location.coordinates.lng]}
+                  icon={markerIcons[location.visibility]}
+                >
+                  <Popup>
+                    <div className="p-2">
+                      <h3 className="font-bold">{location.name}</h3>
+                      <p className="text-sm text-gray-600">{location.address}</p>
+                      <Link
+                        href={`/location-view/${location._id}`}
+                        className="text-indigo-600 hover:text-indigo-800 text-sm mt-2 block"
+                      >
+                        View Details →
+                      </Link>
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+            </MapContainer>
+          </div>
         ) : (
-          <div className="max-w-7xl mx-auto p-4">
+          <div className="max-w-7xl mx-auto p-4 overflow-auto h-full">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredLocations.map((location) => (
                 <div
@@ -187,7 +215,7 @@ export default function MapView() {
                   <p className="text-sm text-gray-600">{location.address}</p>
                   <p className="text-sm text-gray-500 mt-2">{location.description}</p>
                   <Link
-                    href={`/location/${location._id}`}
+                    href={`/location-view/${location._id}`}
                     className="text-indigo-600 hover:text-indigo-800 text-sm mt-4 block"
                   >
                     View Details →
