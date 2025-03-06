@@ -1,16 +1,16 @@
 import './globals.css'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import { AuthProvider } from './context/AuthContext'
-import Navbar from './components/layout/Navbar'
-import LeafletHead from './components/map/LeafletHead'
+import './globals.css'
 import 'leaflet/dist/leaflet.css'
+import { Providers } from './providers'
+import Navbar from './components/layout/Navbar'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'LocationScout',
-  description: 'Find and share the perfect locations for your next project',
+  title: 'Location Scout',
+  description: 'A platform for managing and sharing location information',
 }
 
 export default function RootLayout({
@@ -24,15 +24,14 @@ export default function RootLayout({
         <title>LocationScout</title>
         <meta name="description" content="Find and share the perfect locations for your next project" />
         <link rel="icon" href="/favicon.ico" type="image/x-icon" sizes="16x16" />
-        <LeafletHead />
       </head>
       <body className={inter.className}>
-        <AuthProvider>
-          <div className="flex flex-col min-h-screen">
+        <Providers>
+          <div className="min-h-screen flex flex-col">
             <Navbar />
             <main className="flex-grow">{children}</main>
           </div>
-        </AuthProvider>
+        </Providers>
       </body>
     </html>
   )

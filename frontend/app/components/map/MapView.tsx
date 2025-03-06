@@ -5,23 +5,40 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import Link from 'next/link';
+import AddressSearch from './AddressSearch';
 
 // Define visibility types
-type VisibilityType = 'private' | 'shared' | 'public';
+type VisibilityType = 'private' | 'shared' | 'public' | 'all';
+
+// Define map types
+type MapType = 'street' | 'satellite' | 'terrain';
 
 interface Location {
-  _id: string;
+  id: string;
   name: string;
   address: string;
-  description: string;
-  visibility: VisibilityType;
-  coordinates: {
-    lat: number;
-    lng: number;
-  };
+  latitude: number;
+  longitude: number;
+  visibility: 'private' | 'shared' | 'public';
 }
 
-// Custom hook to fix Leaflet default icon issue
+// Map layer URLs
+const MAP_LAYERS = {
+  street: {
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  },
+  satellite: {
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+  },
+  terrain: {
+    url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+    attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a>'
+  }
+};
+
+// Fix Leaflet's default icon issue
 function useLeafletIcons() {
   useEffect(() => {
     // Define the interface for the Icon prototype
@@ -31,201 +48,215 @@ function useLeafletIcons() {
     
     delete (L.Icon.Default.prototype as IconDefault)._getIconUrl;
     L.Icon.Default.mergeOptions({
-      iconUrl: '/leaflet/marker-icon.png',
       iconRetinaUrl: '/leaflet/marker-icon-2x.png',
+      iconUrl: '/leaflet/marker-icon.png',
       shadowUrl: '/leaflet/marker-shadow.png',
     });
   }, []);
 }
 
-// Custom marker icons for different visibility types
-const createMarkerIcon = (color: string) => {
-  return L.divIcon({
-    className: 'custom-marker',
-    html: `<div style="
-      background-color: ${color};
-      width: 25px;
-      height: 25px;
-      border-radius: 50%;
-      border: 2px solid white;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    "></div>`,
-    iconSize: [25, 25],
-    iconAnchor: [12, 12],
-    popupAnchor: [0, -12],
-  });
-};
-
-const markerIcons = {
-  private: createMarkerIcon('#FF4444'),  // Red
-  shared: createMarkerIcon('#808080'),   // Gray
-  public: createMarkerIcon('#4444FF'),   // Blue
-};
-
 // Map initialization component
-function MapInitializer() {
+function MapInitializer({ locations }: { locations: Location[] }) {
   const map = useMap();
   
   useEffect(() => {
-    map.invalidateSize();
-  }, [map]);
+    if (locations.length > 0) {
+      const bounds = L.latLngBounds(locations.map(loc => [loc.latitude, loc.longitude]));
+      map.fitBounds(bounds);
+    } else {
+      // If no locations, try to get user's location
+      map.locate({ setView: true, maxZoom: 13 });
+    }
+    
+    // Invalidate size after a short delay to ensure proper rendering
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 100);
+  }, [map, locations]);
   
   return null;
 }
 
-export default function MapView() {
-  const [locations, setLocations] = useState<Location[]>([]);
-  const [visibilityFilter, setVisibilityFilter] = useState<VisibilityType[]>(['private', 'shared', 'public']);
+export default function MapView({ locations = [] }: { locations: Location[] }) {
+  const [selectedMapType, setSelectedMapType] = useState<MapType>('street');
+  const [visibilityFilter, setVisibilityFilter] = useState<VisibilityType>('all');
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
-  const [mounted, setMounted] = useState(false);
+  const [searchLocation, setSearchLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   // Initialize Leaflet icons
   useLeafletIcons();
 
-  useEffect(() => {
-    setMounted(true);
-    
-    // Fetch locations
-    const fetchLocations = async () => {
-      try {
-        const response = await fetch('/api/locations');
-        const data = await response.json();
-        setLocations(data);
-      } catch (error) {
-        console.error('Error fetching locations:', error);
-      }
-    };
-
-    fetchLocations();
-  }, []);
-
-  if (!mounted) return null;
-
-  const toggleVisibility = (type: VisibilityType) => {
-    setVisibilityFilter(prev => 
-      prev.includes(type) 
-        ? prev.filter(t => t !== type)
-        : [...prev, type]
-    );
-  };
-
-  const filteredLocations = locations.filter(loc => 
-    visibilityFilter.includes(loc.visibility)
+  const filteredLocations = locations.filter(location => 
+    visibilityFilter === 'all' || location.visibility === visibilityFilter
   );
 
+  const handleAddressSelect = (address: string, lat: number, lng: number) => {
+    setSearchLocation({ lat, lng });
+  };
+
   return (
-    <div className="h-[calc(100vh-64px)] flex flex-col">
-      {/* Visibility Toggle Bar */}
-      <div className="bg-white p-4 shadow-md z-10">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex space-x-4">
-            <button
-              onClick={() => toggleVisibility('private')}
-              className={`px-4 py-2 rounded-md flex items-center space-x-2 ${
-                visibilityFilter.includes('private') ? 'bg-red-100 text-red-700' : 'bg-gray-100'
-              }`}
-            >
-              <div className="w-3 h-3 rounded-full bg-red-500"></div>
-              <span>Private</span>
-            </button>
-            <button
-              onClick={() => toggleVisibility('shared')}
-              className={`px-4 py-2 rounded-md flex items-center space-x-2 ${
-                visibilityFilter.includes('shared') ? 'bg-gray-200 text-gray-700' : 'bg-gray-100'
-              }`}
-            >
-              <div className="w-3 h-3 rounded-full bg-gray-500"></div>
-              <span>Shared</span>
-            </button>
-            <button
-              onClick={() => toggleVisibility('public')}
-              className={`px-4 py-2 rounded-md flex items-center space-x-2 ${
-                visibilityFilter.includes('public') ? 'bg-blue-100 text-blue-700' : 'bg-gray-100'
-              }`}
-            >
-              <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-              <span>Public</span>
-            </button>
-          </div>
-          
+    <div className="flex flex-col space-y-4">
+      <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-4 sm:items-center">
+        <div className="flex-grow">
+          <AddressSearch onSelect={handleAddressSelect} placeholder="Search for a location..." />
+        </div>
+        <div className="flex space-x-2">
           <button
-            onClick={() => setViewMode(prev => prev === 'map' ? 'list' : 'map')}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+            onClick={() => setViewMode('map')}
+            className={`px-4 py-2 rounded-md ${
+              viewMode === 'map'
+                ? 'bg-indigo-600 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
           >
-            {viewMode === 'map' ? 'Switch to List' : 'Switch to Map'}
+            Map
+          </button>
+          <button
+            onClick={() => setViewMode('list')}
+            className={`px-4 py-2 rounded-md ${
+              viewMode === 'list'
+                ? 'bg-indigo-600 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            List
           </button>
         </div>
       </div>
 
-      {/* Map/List View */}
-      <div className="flex-1 relative">
-        {viewMode === 'map' ? (
-          <div className="absolute inset-0">
-            <MapContainer
-              center={[37.7749, -122.4194]} // Default to San Francisco
-              zoom={12}
-              style={{ height: '100%', width: '100%' }}
-              scrollWheelZoom={true}
-            >
-              <MapInitializer />
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-              {filteredLocations.map((location) => (
-                <Marker
-                  key={location._id}
-                  position={[location.coordinates.lat, location.coordinates.lng]}
-                  icon={markerIcons[location.visibility]}
-                >
-                  <Popup>
-                    <div className="p-2">
-                      <h3 className="font-bold">{location.name}</h3>
-                      <p className="text-sm text-gray-600">{location.address}</p>
-                      <Link
-                        href={`/location-view/${location._id}`}
-                        className="text-indigo-600 hover:text-indigo-800 text-sm mt-2 block"
-                      >
-                        View Details →
-                      </Link>
-                    </div>
-                  </Popup>
-                </Marker>
-              ))}
-            </MapContainer>
-          </div>
-        ) : (
-          <div className="max-w-7xl mx-auto p-4 overflow-auto h-full">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredLocations.map((location) => (
-                <div
-                  key={location._id}
-                  className="bg-white rounded-lg shadow-md p-4"
-                >
-                  <div className="flex items-center space-x-2 mb-2">
-                    <div
-                      className={`w-3 h-3 rounded-full ${
-                        location.visibility === 'private' ? 'bg-red-500' :
-                        location.visibility === 'shared' ? 'bg-gray-500' : 'bg-blue-500'
-                      }`}
-                    />
-                    <span className="text-sm text-gray-600 capitalize">{location.visibility}</span>
-                  </div>
-                  <h3 className="font-bold">{location.name}</h3>
-                  <p className="text-sm text-gray-600">{location.address}</p>
-                  <p className="text-sm text-gray-500 mt-2">{location.description}</p>
-                  <Link
-                    href={`/location-view/${location._id}`}
-                    className="text-indigo-600 hover:text-indigo-800 text-sm mt-4 block"
-                  >
-                    View Details →
-                  </Link>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+      <div className="flex space-x-2 overflow-x-auto pb-2">
+        {Object.keys(MAP_LAYERS).map((type) => (
+          <button
+            key={type}
+            onClick={() => setSelectedMapType(type as MapType)}
+            className={`px-4 py-2 rounded-md whitespace-nowrap ${
+              selectedMapType === type
+                ? 'bg-indigo-600 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            {type.charAt(0).toUpperCase() + type.slice(1)}
+          </button>
+        ))}
       </div>
+
+      <div className="flex space-x-2 overflow-x-auto pb-2">
+        {['all', 'private', 'shared', 'public'].map((type) => (
+          <button
+            key={type}
+            onClick={() => setVisibilityFilter(type as VisibilityType)}
+            className={`px-4 py-2 rounded-md capitalize ${
+              visibilityFilter === type
+                ? 'bg-indigo-600 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            {type}
+          </button>
+        ))}
+      </div>
+
+      {viewMode === 'map' ? (
+        <div className="h-[600px] w-full rounded-lg overflow-hidden">
+          <MapContainer
+            center={[37.7749, -122.4194]}
+            zoom={13}
+            className="h-full w-full"
+          >
+            <TileLayer {...MAP_LAYERS[selectedMapType]} />
+            <MapInitializer locations={filteredLocations} />
+            
+            {searchLocation && (
+              <Marker
+                position={[searchLocation.lat, searchLocation.lng]}
+                icon={new L.Icon({
+                  iconUrl: '/leaflet/marker-icon.png',
+                  iconRetinaUrl: '/leaflet/marker-icon-2x.png',
+                  shadowUrl: '/leaflet/marker-shadow.png',
+                  iconSize: [25, 41],
+                  iconAnchor: [12, 41],
+                  popupAnchor: [1, -34],
+                  shadowSize: [41, 41]
+                })}
+              >
+                <Popup>Searched Location</Popup>
+              </Marker>
+            )}
+
+            {filteredLocations.map((location) => (
+              <Marker
+                key={location.id}
+                position={[location.latitude, location.longitude]}
+                icon={new L.Icon({
+                  iconUrl: `/leaflet/marker-icon-${
+                    location.visibility === 'private'
+                      ? 'red'
+                      : location.visibility === 'shared'
+                      ? 'grey'
+                      : 'blue'
+                  }.png`,
+                  iconRetinaUrl: `/leaflet/marker-icon-2x-${
+                    location.visibility === 'private'
+                      ? 'red'
+                      : location.visibility === 'shared'
+                      ? 'grey'
+                      : 'blue'
+                  }.png`,
+                  shadowUrl: '/leaflet/marker-shadow.png',
+                  iconSize: [25, 41],
+                  iconAnchor: [12, 41],
+                  popupAnchor: [1, -34],
+                  shadowSize: [41, 41]
+                })}
+              >
+                <Popup>
+                  <div className="flex flex-col space-y-2">
+                    <h3 className="font-semibold">{location.name}</h3>
+                    <p className="text-sm text-gray-600">{location.address}</p>
+                    <Link
+                      href={`/location-view/${location.id}`}
+                      className="text-sm text-indigo-600 hover:text-indigo-800"
+                    >
+                      View Details
+                    </Link>
+                  </div>
+                </Popup>
+              </Marker>
+            ))}
+          </MapContainer>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredLocations.map((location) => (
+            <div
+              key={location.id}
+              className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow"
+            >
+              <h3 className="font-semibold text-lg">{location.name}</h3>
+              <p className="text-gray-600 mt-1">{location.address}</p>
+              <div className="mt-2">
+                <span
+                  className={`inline-block px-2 py-1 text-xs rounded-full ${
+                    location.visibility === 'private'
+                      ? 'bg-red-100 text-red-800'
+                      : location.visibility === 'shared'
+                      ? 'bg-gray-100 text-gray-800'
+                      : 'bg-blue-100 text-blue-800'
+                  }`}
+                >
+                  {location.visibility}
+                </span>
+              </div>
+              <Link
+                href={`/location-view/${location.id}`}
+                className="mt-3 inline-block text-indigo-600 hover:text-indigo-800"
+              >
+                View Details
+              </Link>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 } 
