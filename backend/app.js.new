@@ -1,0 +1,10 @@
+const cors = require('cors');
+
+// ... other imports
+
+app.use(cors({
+  origin: 'http://localhost:3000',
+  credentials: true
+}));
+
+// ... rest of your code 
