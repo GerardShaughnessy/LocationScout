@@ -1,126 +1,72 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { useAuth } from './context/AuthContext';
-import dynamic from 'next/dynamic';
 
-// Dynamically import MapView to avoid SSR issues with Leaflet
-const MapView = dynamic(
-  () => import('./components/map/MapView'),
-  { ssr: false }
-);
-
-export default function HomePage() {
-  const { user, isLoading } = useAuth();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted || isLoading) {
-    return <div className="p-8 text-center">Loading...</div>;
-  }
+export default function Home() {
+  const { data: session } = useSession();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center">
-          <h1 className="text-4xl font-extrabold text-gray-900 sm:text-5xl sm:tracking-tight lg:text-6xl">
-            Welcome to LocationScout
+          <h1 className="text-4xl font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
+            Welcome to Location Scout
           </h1>
-          <p className="mt-5 max-w-xl mx-auto text-xl text-gray-500">
-            Find and share the perfect locations for your next project
+          <p className="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
+            Discover and share amazing locations for your next project.
           </p>
-          
-          <div className="mt-10">
-            {user ? (
-              <div className="space-y-4">
-                <p className="text-lg">
-                  Welcome back, <span className="font-medium">{user.name}</span>!
-                </p>
-                <div className="flex flex-wrap justify-center gap-4">
-                  <Link
-                    href="/locations"
-                    className="px-6 py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-                  >
-                    Browse Locations
-                  </Link>
-                  <Link
-                    href="/location-new"
-                    className="px-6 py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-                  >
-                    Add New Location
-                  </Link>
-                  <Link
-                    href="/profile"
-                    className="px-6 py-3 border border-indigo-600 text-indigo-600 rounded-md hover:bg-indigo-50"
-                  >
-                    View Profile
-                  </Link>
-                </div>
-              </div>
+          <div className="mt-5 max-w-md mx-auto sm:flex sm:justify-center md:mt-8">
+            {session ? (
+              <Link
+                href="/locations"
+                className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg md:px-10"
+              >
+                View Locations
+              </Link>
             ) : (
-              <div className="space-y-4">
-                <p className="text-lg">
-                  Join our community to discover and share amazing locations
-                </p>
-                <div className="flex flex-wrap justify-center gap-4">
-                  <Link
-                    href="/register"
-                    className="px-6 py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-                  >
-                    Sign Up
-                  </Link>
-                  <Link
-                    href="/login"
-                    className="px-6 py-3 border border-indigo-600 text-indigo-600 rounded-md hover:bg-indigo-50"
-                  >
-                    Log In
-                  </Link>
-                  <Link
-                    href="/locations"
-                    className="px-6 py-3 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
-                  >
-                    Browse Locations
-                  </Link>
-                </div>
-              </div>
+              <Link
+                href="/auth/signin"
+                className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg md:px-10"
+              >
+                Get Started
+              </Link>
             )}
           </div>
         </div>
-        
-        <div className="mt-20">
-          <h2 className="text-2xl font-bold text-gray-900 text-center mb-8">
-            Why Use LocationScout?
+
+        <div className="mt-24">
+          <h2 className="text-2xl font-extrabold text-gray-900 text-center mb-12">
+            Features
           </h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Discover Locations</h3>
-              <p className="text-gray-500">
-                Find the perfect locations for your film, photography, or event projects.
-              </p>
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="px-4 py-5 sm:p-6">
+                <h3 className="text-lg font-medium text-gray-900">Map View</h3>
+                <p className="mt-2 text-sm text-gray-500">
+                  View locations on an interactive map with different map types and custom markers.
+                </p>
+              </div>
             </div>
-            
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Share Your Spots</h3>
-              <p className="text-gray-500">
-                Add your favorite locations and help others discover hidden gems.
-              </p>
+            <div className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="px-4 py-5 sm:p-6">
+                <h3 className="text-lg font-medium text-gray-900">Location Sharing</h3>
+                <p className="mt-2 text-sm text-gray-500">
+                  Share locations with others or keep them private. Control who can see your locations.
+                </p>
+              </div>
             </div>
-            
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Connect & Collaborate</h3>
-              <p className="text-gray-500">
-                Join a community of creators and location scouts to collaborate on projects.
-              </p>
+            <div className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="px-4 py-5 sm:p-6">
+                <h3 className="text-lg font-medium text-gray-900">Search & Filter</h3>
+                <p className="mt-2 text-sm text-gray-500">
+                  Search for locations by address and filter by visibility type.
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </div>
-      <MapView />
     </div>
   );
 } 
