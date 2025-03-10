@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import DepartmentModal from '@/app/components/DepartmentModal';
 
 export default function SignIn() {
   const router = useRouter();
@@ -10,6 +11,8 @@ export default function SignIn() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showDepartmentModal, setShowDepartmentModal] = useState(false);
+  const [pendingGoogleSignIn, setPendingGoogleSignIn] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,11 +40,25 @@ export default function SignIn() {
   };
 
   const handleGoogleSignIn = async () => {
+    setPendingGoogleSignIn(true);
+    setShowDepartmentModal(true);
+  };
+
+  const handleDepartmentSubmit = async (department: string) => {
+    setShowDepartmentModal(false);
     try {
-      await signIn('google', { callbackUrl: '/locations' });
+      const result = await signIn('google', {
+        callbackUrl: '/locations',
+        department,
+      });
+      if (result?.error) {
+        setError('Google sign in failed. Please try again.');
+      }
     } catch (err) {
       console.error('Google sign in error:', err);
       setError('An error occurred with Google sign in. Please try again.');
+    } finally {
+      setPendingGoogleSignIn(false);
     }
   };
 
@@ -56,7 +73,8 @@ export default function SignIn() {
         <div className="mt-8 space-y-6">
           <button
             onClick={handleGoogleSignIn}
-            className="w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            disabled={pendingGoogleSignIn}
+            className="w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:bg-red-300 disabled:cursor-not-allowed"
           >
             <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
               <path
@@ -76,7 +94,7 @@ export default function SignIn() {
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
               />
             </svg>
-            Sign in with Google
+            {pendingGoogleSignIn ? 'Signing in...' : 'Sign in with Google'}
           </button>
 
           <div className="relative">
@@ -166,6 +184,15 @@ export default function SignIn() {
           </div>
         </div>
       </div>
+
+      <DepartmentModal
+        isOpen={showDepartmentModal}
+        onSubmit={handleDepartmentSubmit}
+        onClose={() => {
+          setShowDepartmentModal(false);
+          setPendingGoogleSignIn(false);
+        }}
+      />
     </div>
   );
 } 
