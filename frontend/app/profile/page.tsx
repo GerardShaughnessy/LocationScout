@@ -3,12 +3,14 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import AccountSettings from '../components/profile/AccountSettings';
 
 interface UserProfile {
   name: string;
   email: string;
   department: string;
   role: string;
+  avatar?: string;
 }
 
 export default function ProfilePage() {
@@ -31,12 +33,14 @@ export default function ProfilePage() {
         email: session.user.email || '',
         department: session.user.department || '',
         role: session.user.role || '',
+        avatar: session.user.image || '',
       });
       setFormData({
         name: session.user.name || '',
         email: session.user.email || '',
         department: session.user.department || '',
         role: session.user.role || '',
+        avatar: session.user.image || '',
       });
     }
   }, [session]);
@@ -87,10 +91,11 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-3xl mx-auto space-y-8">
+        {/* Profile Information */}
         <div className="bg-white shadow rounded-lg p-6">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">Profile</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Profile Information</h1>
             {!isEditing && (
               <button
                 onClick={() => setIsEditing(true)}
@@ -195,6 +200,9 @@ export default function ProfilePage() {
             </div>
           )}
         </div>
+
+        {/* Account Settings */}
+        <AccountSettings userId={session?.user?.id || ''} currentAvatar={profile.avatar} />
       </div>
     </div>
   );
