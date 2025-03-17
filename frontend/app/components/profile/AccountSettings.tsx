@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import ActivityHistory from './ActivityHistory';
+import { signOut } from 'next-auth/react';
 
 interface AccountSettingsProps {
   userId: string;
@@ -18,6 +20,9 @@ export default function AccountSettings({ userId, currentAvatar }: AccountSettin
   const [avatarPreview, setAvatarPreview] = useState<string | null>(currentAvatar || null);
   const [avatarError, setAvatarError] = useState('');
   const [avatarSuccess, setAvatarSuccess] = useState('');
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteError, setDeleteError] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,6 +110,30 @@ export default function AccountSettings({ userId, currentAvatar }: AccountSettin
       }
     } catch (error) {
       setAvatarError('An error occurred while uploading avatar');
+    }
+  };
+
+  const handleAccountDelete = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setDeleteError('');
+
+    try {
+      const response = await fetch('/api/profile/delete', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password: deletePassword }),
+      });
+
+      if (response.ok) {
+        await signOut({ callbackUrl: '/' });
+      } else {
+        const data = await response.json();
+        setDeleteError(data.error || 'Failed to delete account');
+      }
+    } catch (error) {
+      setDeleteError('An error occurred while deleting account');
     }
   };
 
@@ -231,6 +260,64 @@ export default function AccountSettings({ userId, currentAvatar }: AccountSettin
             Update Password
           </button>
         </form>
+      </div>
+
+      {/* Activity History Section */}
+      <div className="bg-white shadow rounded-lg p-6">
+        <h2 className="text-lg font-medium text-gray-900 mb-4">Activity History</h2>
+        <ActivityHistory />
+      </div>
+
+      {/* Account Deletion Section */}
+      <div className="bg-white shadow rounded-lg p-6">
+        <h2 className="text-lg font-medium text-gray-900 mb-4">Delete Account</h2>
+        <div className="space-y-4">
+          <p className="text-sm text-gray-500">
+            Once you delete your account, there is no going back. Please be certain.
+          </p>
+          {!showDeleteConfirm ? (
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            >
+              Delete Account
+            </button>
+          ) : (
+            <form onSubmit={handleAccountDelete} className="space-y-4">
+              <div>
+                <label htmlFor="deletePassword" className="block text-sm font-medium text-gray-700">
+                  Confirm Password
+                </label>
+                <input
+                  type="password"
+                  id="deletePassword"
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+                  required
+                />
+              </div>
+              {deleteError && (
+                <p className="text-sm text-red-600">{deleteError}</p>
+              )}
+              <div className="flex space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                >
+                  Delete Account
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
       </div>
     </div>
   );
