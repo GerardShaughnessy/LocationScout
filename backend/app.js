@@ -7,6 +7,7 @@ const locationRoutes = require('./routes/locationRoutes');
 const photoRoutes = require('./routes/photoRoutes');
 const ratingRoutes = require('./routes/ratingRoutes');
 const searchRoutes = require('./routes/searchRoutes');
+const activityRoutes = require('./routes/activityRoutes');
 const { protect } = require('./middleware/authMiddleware');
 
 const app = express();
@@ -27,6 +28,7 @@ app.use('/api/locations', locationRoutes);
 app.use('/api/locations', photoRoutes);
 app.use('/api/locations', ratingRoutes);
 app.use('/api/search', searchRoutes);
+app.use('/api', activityRoutes);
 
 // Protected test route
 app.get('/api/test', protect, (req, res) => {
@@ -47,4 +49,6 @@ const HOST = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost';
 
 app.listen(PORT, HOST, () => {
   console.log(`Server running on port ${PORT}`);
-}); 
+});
+
+module.exports = app; 
