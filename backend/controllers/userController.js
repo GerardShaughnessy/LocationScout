@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const UserActivity = require('../models/UserActivity');
 
 // Refresh token
 exports.refreshToken = async (req, res) => {
@@ -85,4 +86,34 @@ exports.loginUser = async (req, res) => {
     console.error('Login error:', error);
     res.status(500).json({ message: 'Server error' });
   }
-}; 
+};
+
+exports.deleteAccount = async (req, res) => {
+  try {
+    const { password } = req.body;
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Verify password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Invalid password' });
+    }
+
+    // Delete user's activities
+    await UserActivity.deleteMany({ userId: user._id });
+
+    // Delete user
+    await User.findByIdAndDelete(user._id);
+
+    res.json({ message: 'Account deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting account:', error);
+    res.status(500).json({ message: 'Failed to delete account' });
+  }
+};
+
+module.exports = exports; 
